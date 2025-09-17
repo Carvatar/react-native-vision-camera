@@ -25,6 +25,9 @@ struct CameraDeviceFormat: Equatable, CustomStringConvertible {
   let minISO: Float
   let maxISO: Float
 
+  let minShutter: Double
+  let maxShutter: Double
+
   let fieldOfView: Float
 
   let videoStabilizationModes: [VideoStabilizationMode]
@@ -44,6 +47,8 @@ struct CameraDeviceFormat: Equatable, CustomStringConvertible {
     maxFps = format.maxFps
     minISO = format.minISO
     maxISO = format.maxISO
+    minShutter = format.minExposureDuration.seconds
+    maxShutter = format.maxExposureDuration.seconds
     fieldOfView = format.videoFieldOfView
     videoStabilizationModes = format.videoStabilizationModes.map { VideoStabilizationMode(from: $0) }
     autoFocusSystem = AutoFocusSystem(fromFocusSystem: format.autoFocusSystem)
@@ -62,6 +67,8 @@ struct CameraDeviceFormat: Equatable, CustomStringConvertible {
     maxFps = jsValue["maxFps"] as! Double
     minISO = jsValue["minISO"] as! Float
     maxISO = jsValue["maxISO"] as! Float
+    minShutter = jsValue["minShutter"] as! Double
+    maxShutter = jsValue["maxShutter"] as! Double
     fieldOfView = jsValue["fieldOfView"] as! Float
     let jsVideoStabilizationModes = jsValue["videoStabilizationModes"] as! [String]
     videoStabilizationModes = try jsVideoStabilizationModes.map { try VideoStabilizationMode(jsValue: $0) }
@@ -88,6 +95,8 @@ struct CameraDeviceFormat: Equatable, CustomStringConvertible {
       "videoWidth": videoWidth,
       "minISO": minISO,
       "maxISO": maxISO,
+      "minShutter": minShutter,
+      "maxShutter": maxShutter,
       "fieldOfView": fieldOfView,
       "supportsVideoHdr": supportsVideoHdr,
       "supportsPhotoHdr": supportsPhotoHdr,
@@ -98,6 +107,6 @@ struct CameraDeviceFormat: Equatable, CustomStringConvertible {
   }
 
   var description: String {
-    return "\(photoWidth)x\(photoHeight) | \(videoWidth)x\(videoHeight)@\(maxFps) (ISO: \(minISO)..\(maxISO))"
+    return "\(photoWidth)x\(photoHeight) | \(videoWidth)x\(videoHeight)@\(maxFps) (ISO: \(minISO)..\(maxISO), Shutter: \(minShutter)..\(maxShutter)s)"
   }
 }

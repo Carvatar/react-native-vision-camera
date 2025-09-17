@@ -17,6 +17,8 @@ data class CameraDeviceFormat(
   val maxFps: Double,
   val minISO: Double,
   val maxISO: Double,
+  val minShutter: Double,
+  val maxShutter: Double,
   val fieldOfView: Double,
   val videoStabilizationModes: List<VideoStabilizationMode>,
   val autoFocusSystem: AutoFocusSystem,
