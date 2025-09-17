@@ -73,6 +73,12 @@ class PhotoCaptureDelegate: GlobalReferenceHolder, AVCapturePhotoCaptureDelegate
     print("Full EXIF metadata: \(exif ?? [:])")
 
     do {
+      // Ensure EXIF WhiteBalance reflects the device's whiteBalanceMode enum
+      metadataProvider.exifWhiteBalanceRawValue = device?.whiteBalanceMode.rawValue
+
+      // Get the modified metadata from MetadataProvider
+      let modifiedMetadata = metadataProvider.replacementMetadata(for: photo) ?? photo.metadata
+
       try FileUtils.writePhotoToFile(photo: photo,
                                      metadataProvider: metadataProvider,
                                      file: path)
@@ -91,7 +97,7 @@ class PhotoCaptureDelegate: GlobalReferenceHolder, AVCapturePhotoCaptureDelegate
         "orientation": orientation,
         "isMirrored": isMirrored,
         "isRawPhoto": photo.isRawPhoto,
-        "metadata": photo.metadata,
+        "metadata": modifiedMetadata,
         "thumbnail": photo.embeddedThumbnailPhotoFormat as Any,
       ])
     } catch let error as CameraError {

@@ -18,6 +18,8 @@ class MetadataProvider: NSObject, AVCapturePhotoFileDataRepresentationCustomizer
    */
   var locationProvider: LocationProvider?
 
+// Optional override to set EXIF WhiteBalance to match AVCaptureDevice.whiteBalanceMode.rawValue
+  var exifWhiteBalanceRawValue: Int?
   // MARK: - Photo Metadata
 
   /**
@@ -26,11 +28,13 @@ class MetadataProvider: NSObject, AVCapturePhotoFileDataRepresentationCustomizer
   func replacementMetadata(for photo: AVCapturePhoto) -> [String: Any]? {
     var properties = photo.metadata
 
-    // Add branding info
-    if var exifDictionary = properties[kCGImagePropertyExifDictionary as String] as? [String: Any] {
-      exifDictionary[kCGImagePropertyExifUserComment as String] = "Captured with VisionCamera by mrousavy"
-      properties[kCGImagePropertyExifDictionary as String] = exifDictionary
+    // Build or get EXIF dictionary, add branding and WB override
+    var exifDictionary = properties[kCGImagePropertyExifDictionary as String] as? [String: Any] ?? [:]
+    exifDictionary[kCGImagePropertyExifUserComment as String] = "Captured with VisionCamera by mrousavy"
+    if let wb = exifWhiteBalanceRawValue {
+      exifDictionary[kCGImagePropertyExifWhiteBalance as String] = wb
     }
+    properties[kCGImagePropertyExifDictionary as String] = exifDictionary
 
     // Add GPS Location EXIF info
     if let locationProvider,
