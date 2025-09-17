@@ -281,12 +281,61 @@ extension CameraSession {
       }
       device.focusMode = .continuousAutoFocus
     }
-    if device.isExposureModeSupported(.continuousAutoExposure) {
-      if device.isExposurePointOfInterestSupported {
-        device.exposurePointOfInterest = CGPoint(x: 0.5, y: 0.5)
+    // Only enable continuous auto exposure if the user did NOT request manual ISO or shutter
+    if configuration.iso == nil && configuration.shutter == nil {
+      if device.isExposureModeSupported(.continuousAutoExposure) {
+        if device.isExposurePointOfInterestSupported {
+          device.exposurePointOfInterest = CGPoint(x: 0.5, y: 0.5)
+        }
+        device.exposureMode = .continuousAutoExposure
       }
-      device.exposureMode = .continuousAutoExposure
     }
+
+    // Only enable continuous auto white balance if the user did NOT request manual Kelvin
+    if configuration.whiteBalance == nil {
+      if device.isWhiteBalanceModeSupported(.continuousAutoWhiteBalance) {
+        device.whiteBalanceMode = .continuousAutoWhiteBalance
+      }
+    }
+  }
+
+  // New: Apply manual ISO + shutter speed (seconds)
+  func configureManualExposure(configuration: CameraConfiguration, device: AVCaptureDevice) {
+    guard configuration.iso != nil || configuration.shutter != nil else { return }
+    guard device.isExposureModeSupported(.custom) else { return }
+
+    let minISO = device.activeFormat.minISO
+    let maxISO = device.activeFormat.maxISO
+    let currentISO = device.iso
+    let targetISO = max(min(configuration.iso ?? currentISO, maxISO), minISO)
+
+    let minSecs = device.activeFormat.minExposureDuration.seconds
+    let maxSecs = device.activeFormat.maxExposureDuration.seconds
+    let currentSecs = device.exposureDuration.seconds
+    let targetSecs = max(min(configuration.shutter ?? currentSecs, maxSecs), minSecs)
+
+    let duration = CMTimeMakeWithSeconds(targetSecs, preferredTimescale: 1_000_000_000)
+
+    device.setExposureModeCustom(duration: duration, iso: targetISO, completionHandler: nil)
+  }
+
+  // New: Apply manual white balance (Kelvin)
+  func configureWhiteBalance(configuration: CameraConfiguration, device: AVCaptureDevice) {
+    guard let kelvin = configuration.whiteBalance else { return }
+    guard device.isWhiteBalanceModeSupported(.locked) else { return }
+
+    // Convert Kelvin -> gains and lock WB
+    let tempTint = AVCaptureDevice.WhiteBalanceTemperatureAndTintValues(temperature: kelvin, tint: 0)
+    var gains = device.deviceWhiteBalanceGains(for: tempTint)
+
+    // Normalize gains to device limits (gains must be >= 1.0 and <= maxWhiteBalanceGain)
+    func clamp(_ value: Float, _ min: Float, _ max: Float) -> Float { return Swift.max(Swift.min(value, max), min) }
+    let maxGain = device.maxWhiteBalanceGain
+    gains.redGain = clamp(gains.redGain, 1.0, maxGain)
+    gains.greenGain = clamp(gains.greenGain, 1.0, maxGain)
+    gains.blueGain = clamp(gains.blueGain, 1.0, maxGain)
+
+    device.setWhiteBalanceModeLocked(with: gains, completionHandler: nil)
   }
 
   /**

@@ -47,6 +47,11 @@ final class CameraConfiguration {
   // Exposure
   var exposure: Float?
 
+  // New manual controls
+  var iso: Float?
+  var shutter: Double? // seconds
+  var whiteBalance: Float? // Kelvin
+
   // isActive (Start/Stop)
   var isActive = false
 
@@ -71,6 +76,10 @@ final class CameraConfiguration {
       torch = other.torch
       zoom = other.zoom
       exposure = other.exposure
+      // New
+      iso = other.iso
+      shutter = other.shutter
+      whiteBalance = other.whiteBalance
       isActive = other.isActive
       audio = other.audio
     } else {
@@ -98,6 +107,10 @@ final class CameraConfiguration {
     let torchChanged: Bool
     let zoomChanged: Bool
     let exposureChanged: Bool
+    // New differences
+    let isoChanged: Bool
+    let shutterChanged: Bool
+    let whiteBalanceChanged: Bool
 
     let audioSessionChanged: Bool
     let locationChanged: Bool
@@ -115,7 +128,8 @@ final class CameraConfiguration {
      [`formatChanged`, `sidePropsChanged`, `zoomChanged`, `exposureChanged`]
      */
     var isDeviceConfigurationDirty: Bool {
-      return isSessionConfigurationDirty || formatChanged || sidePropsChanged || zoomChanged || exposureChanged
+      // Include our new manual controls so the device gets locked and updated
+      return isSessionConfigurationDirty || formatChanged || sidePropsChanged || zoomChanged || exposureChanged || isoChanged || shutterChanged || whiteBalanceChanged
     }
 
     init(between left: CameraConfiguration?, and right: CameraConfiguration) {
@@ -139,6 +153,11 @@ final class CameraConfiguration {
       zoomChanged = formatChanged || left?.zoom != right.zoom
       // exposure (depends on device)
       exposureChanged = inputChanged || left?.exposure != right.exposure
+
+      // New
+      isoChanged = inputChanged || left?.iso != right.iso
+      shutterChanged = inputChanged || left?.shutter != right.shutter
+      whiteBalanceChanged = inputChanged || left?.whiteBalance != right.whiteBalance
 
       // audio session
       audioSessionChanged = left?.audio != right.audio

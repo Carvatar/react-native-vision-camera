@@ -149,6 +149,24 @@ export interface CameraProps extends ViewProps {
    * The value between min- and max supported exposure is considered the default, neutral value.
    */
   exposure?: number
+  /**
+   * iOS only. Manually set the camera ISO. Keep as low as possible (e.g., 80) to reduce noise.
+   * If unset, auto ISO is used.
+   */
+  iso?: number
+
+  /**
+   * iOS only. Manually set the shutter speed (exposure duration) in seconds.
+   * Example: 0.001 for 1/1000s. If unset, auto shutter is used.
+   */
+  shutter?: number
+
+  /**
+   * iOS only. Manually set white balance (color temperature) in Kelvin.
+   * Example: 5500 for daylight. If unset, auto white-balance is used.
+   */
+  whiteBalance?: number
+
   //#endregion
 
   //#region Format/Preset selection

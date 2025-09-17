@@ -82,6 +82,11 @@ public final class CameraView: UIView, CameraSessionDelegate, PreviewViewDelegat
   @objc var onAverageFpsChangedEvent: RCTDirectEventBlock?
   @objc var onCodeScannedEvent: RCTDirectEventBlock?
 
+ // New manual controls (iOS-only)
+  @objc var iso: NSNumber?
+  @objc var shutter: NSNumber? // seconds (e.g., 0.001 for 1/1000s)
+  @objc var whiteBalance: NSNumber?
+
   // zoom
   @objc var enableZoomGesture = false {
     didSet {
@@ -267,8 +272,13 @@ public final class CameraView: UIView, CameraSessionDelegate, PreviewViewDelegat
       // Zoom
       config.zoom = zoom.doubleValue
 
-      // Exposure
+      // Exposure bias (existing)
       config.exposure = exposure.floatValue
+
+      // New: manual exposure controls and white balance
+      config.iso = iso?.floatValue
+      config.shutter = shutter?.doubleValue
+      config.whiteBalance = whiteBalance?.floatValue
 
       // isActive
       config.isActive = isActive

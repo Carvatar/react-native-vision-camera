@@ -187,6 +187,15 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
           if difference.exposureChanged {
             self.configureExposure(configuration: config, device: device)
           }
+
+          // New: Manual exposure if ISO/shutter changed
+          if difference.isoChanged || difference.shutterChanged {
+            self.configureManualExposure(configuration: config, device: device)
+          }
+          // New: Manual white-balance if changed
+          if difference.whiteBalanceChanged {
+            self.configureWhiteBalance(configuration: config, device: device)
+          }
         }
 
         if difference.isSessionConfigurationDirty {
