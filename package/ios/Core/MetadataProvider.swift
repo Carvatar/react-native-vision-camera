@@ -20,6 +20,22 @@ class MetadataProvider: NSObject, AVCapturePhotoFileDataRepresentationCustomizer
 
 // Optional override to set EXIF WhiteBalance to match AVCaptureDevice.whiteBalanceMode.rawValue
   var exifWhiteBalanceRawValue: Int?
+  
+  /**
+   Maps iOS AVCaptureDevice.WhiteBalanceMode enum values to standard EXIF WhiteBalance values
+   */
+  private func mapWhiteBalanceModeToEXIF(_ rawValue: Int) -> Int {
+    switch rawValue {
+    case 0: // locked
+      return 1 // Manual white balance
+    case 1: // autoWhiteBalance
+      return 0 // Auto white balance
+    case 2: // continuousAutoWhiteBalance
+      return 0 // Auto white balance
+    default:
+      return 0 // Default to auto
+    }
+  }
   // MARK: - Photo Metadata
 
   /**
@@ -32,7 +48,8 @@ class MetadataProvider: NSObject, AVCapturePhotoFileDataRepresentationCustomizer
     var exifDictionary = properties[kCGImagePropertyExifDictionary as String] as? [String: Any] ?? [:]
     exifDictionary[kCGImagePropertyExifUserComment as String] = "Captured with VisionCamera by mrousavy"
     if let wb = exifWhiteBalanceRawValue {
-      exifDictionary[kCGImagePropertyExifWhiteBalance as String] = wb
+      let mappedWhiteBalance = mapWhiteBalanceModeToEXIF(wb)
+      exifDictionary[kCGImagePropertyExifWhiteBalance as String] = mappedWhiteBalance
     }
     properties[kCGImagePropertyExifDictionary as String] = exifDictionary
 
