@@ -175,7 +175,7 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
             self.configureVideoOutputFormat(configuration: config)
             self.configurePhotoOutputFormat(configuration: config)
           }
-          // 7. Configure side-props (fps, lowLightBoost)
+          // 7. Configure side-props (fps, lowLightBoost) - BEFORE white balance to avoid conflicts
           if difference.sidePropsChanged {
             try self.configureSideProps(configuration: config, device: device)
           }
@@ -192,9 +192,17 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
           if difference.isoChanged || difference.shutterChanged {
             self.configureManualExposure(configuration: config, device: device)
           }
-          // New: Manual white-balance if changed
-          if difference.whiteBalanceChanged {
-            self.configureWhiteBalance(configuration: config, device: device)
+          // New: Manual white-balance enforcement - AFTER side props to override auto settings
+          if config.whiteBalance != nil {
+            // Re-apply manual WB when WB changed OR when other device/session-affecting changes occurred
+            if difference.whiteBalanceChanged || difference.formatChanged || difference.outputsChanged || difference.sidePropsChanged || difference.inputChanged {
+              self.configureWhiteBalance(configuration: config, device: device)
+            }
+          } else if difference.whiteBalanceChanged {
+            // Config switched to automatic: ensure device is in auto WB
+            if device.isWhiteBalanceModeSupported(.continuousAutoWhiteBalance) {
+              device.whiteBalanceMode = .continuousAutoWhiteBalance
+            }
           }
         }
 

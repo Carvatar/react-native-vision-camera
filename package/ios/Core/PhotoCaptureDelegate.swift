@@ -16,17 +16,21 @@ class PhotoCaptureDelegate: GlobalReferenceHolder, AVCapturePhotoCaptureDelegate
   private let cameraSessionDelegate: CameraSessionDelegate?
   private let metadataProvider: MetadataProvider
   private let path: URL
+  // Use the actual device from the active CameraSession for accurate WB readings
+  private let device: AVCaptureDevice?
 
   required init(promise: Promise,
                 enableShutterSound: Bool,
                 metadataProvider: MetadataProvider,
                 path: URL,
-                cameraSessionDelegate: CameraSessionDelegate?) {
+                cameraSessionDelegate: CameraSessionDelegate?,
+                device: AVCaptureDevice?) {
     self.promise = promise
     self.enableShutterSound = enableShutterSound
     self.metadataProvider = metadataProvider
     self.path = path
     self.cameraSessionDelegate = cameraSessionDelegate
+    self.device = device
     super.init()
     makeGlobal()
   }
@@ -50,12 +54,29 @@ class PhotoCaptureDelegate: GlobalReferenceHolder, AVCapturePhotoCaptureDelegate
       return
     }
 
+    // Debug: Check white balance mode and EXIF values using the active session device
+    let debugDevice = device ?? AVCaptureDevice.default(for: .video)
+    if let dev = debugDevice {
+      print("Current white balance mode: \(dev.whiteBalanceMode.rawValue)")
+      print("Current white balance gains: R=\(dev.deviceWhiteBalanceGains.redGain), G=\(dev.deviceWhiteBalanceGains.greenGain), B=\(dev.deviceWhiteBalanceGains.blueGain)")
+    } else {
+      print("Current white balance mode: unknown (no active device)")
+    }
+    
+    let exif = photo.metadata["{Exif}"] as? [String: Any]
+    if let whiteBalance = exif?["WhiteBalance"] {
+      print("EXIF WhiteBalance value: \(whiteBalance)")
+    } else {
+      print("EXIF WhiteBalance value not found")
+    }
+    
+    print("Full EXIF metadata: \(exif ?? [:])")
+
     do {
       try FileUtils.writePhotoToFile(photo: photo,
                                      metadataProvider: metadataProvider,
                                      file: path)
 
-      let exif = photo.metadata["{Exif}"] as? [String: Any]
       let width = exif?["PixelXDimension"]
       let height = exif?["PixelYDimension"]
       let exifOrientation = photo.metadata[String(kCGImagePropertyOrientation)] as? UInt32 ?? CGImagePropertyOrientation.up.rawValue

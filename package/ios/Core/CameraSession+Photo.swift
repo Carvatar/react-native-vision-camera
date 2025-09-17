@@ -79,12 +79,25 @@ extension CameraSession {
         photoSettings.flashMode = options.flash.toFlashMode()
       }
 
+      // Safety net: enforce manual white balance right before capture if configured
+      if let kelvin = configuration.whiteBalance {
+        do {
+          try videoDeviceInput.device.lockForConfiguration()
+          defer { videoDeviceInput.device.unlockForConfiguration() }
+          self.configureWhiteBalance(configuration: configuration, device: videoDeviceInput.device)
+          VisionLogger.log(level: .info, message: "Applied manual white balance (\(kelvin)K) before photo capture.")
+        } catch {
+          VisionLogger.log(level: .error, message: "Failed to lock device for manual white balance: \(error.localizedDescription)")
+        }
+      }
+
       // Actually do the capture!
       let photoCaptureDelegate = PhotoCaptureDelegate(promise: promise,
                                                       enableShutterSound: options.enableShutterSound,
                                                       metadataProvider: self.metadataProvider,
                                                       path: options.path,
-                                                      cameraSessionDelegate: self.delegate)
+                                                      cameraSessionDelegate: self.delegate,
+                                                      device: videoDeviceInput.device)
       photoOutput.capturePhoto(with: photoSettings, delegate: photoCaptureDelegate)
 
       // Assume that `takePhoto` is always called with the same parameters, so prepare the next call too.

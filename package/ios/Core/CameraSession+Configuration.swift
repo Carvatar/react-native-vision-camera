@@ -335,6 +335,8 @@ extension CameraSession {
     gains.greenGain = clamp(gains.greenGain, 1.0, maxGain)
     gains.blueGain = clamp(gains.blueGain, 1.0, maxGain)
 
+    // First set the mode to locked, then apply the gains
+    device.whiteBalanceMode = .locked
     device.setWhiteBalanceModeLocked(with: gains, completionHandler: nil)
   }
 

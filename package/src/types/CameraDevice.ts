@@ -216,6 +216,13 @@ export interface CameraDevice {
    */
   supportsFocus: boolean
   /**
+   * Specifies whether this device supports manual white balance control.
+   * When true, you can control the white balance directly using the `whiteBalance` prop.
+   * 
+   * @platform iOS
+   */
+  supportsManualWhiteBalance: boolean
+  /**
    * The hardware level of the Camera.
    * - On Android, some older devices are running at a `legacy` or `limited` level which means they are running in a backwards compatible mode.
    * - On iOS, all devices are `full`.
