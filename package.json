@@ -6,6 +6,9 @@
     "example",
     "docs"
   ],
+  "scripts": {
+    "postinstall": "cd package && npm run build"
+  },
   "trustedDependencies": [
     "react-native-vision-camera"
   ]
